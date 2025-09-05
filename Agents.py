@@ -5,8 +5,8 @@ import re
 from typing import Dict, Any, Optional, Tuple
 from opentelemetry.trace import get_tracer
 
-# ==== YOUR HARD-CODED CONFIG (left as-is per your request)
-OPENAI_API_KEY = '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'
+# ==== CONFIG
+OPENAI_API_KEY = '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'
 ARIZE_API_KEY = 'ak-83932695-b8e5-4c1b-b06d-300dbd28ea1b-A2RReorb1KqILlL3sZ9KXh2YFrdDBZd8'
 ARIZE_SPACE_ID = 'U3BhY2U6MjY4ODI6bmYyUg=='
 ARIZE_PROJECT_NAME = 'FSI-Demo-Project'
@@ -14,31 +14,57 @@ ARIZE_PROJECT_NAME = 'FSI-Demo-Project'
 # ==== OTel / Arize Setup
 from arize.otel import register
 from openinference.instrumentation.openai import OpenAIInstrumentor
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 
-def init_tracing_once():
+def init_tracing_realtime():
     if "arize_tracer_provider" not in st.session_state:
-        tp = register(space_id=ARIZE_SPACE_ID, api_key=ARIZE_API_KEY, project_name=ARIZE_PROJECT_NAME)
-        st.session_state["arize_tracer_provider"] = tp
-        st.session_state["oi_instrumented"] = False
-        tracer = get_tracer("multi-agent-demo")
-        with tracer.start_as_current_span("startup_check") as span:
-            span.set_attribute("app.name", "MultiAgentDemo")
-            span.set_attribute("env", "demo")
-            span.set_attribute("graph.node.id", "system_init")
-            span.set_attribute("session.id", f"streamlit_{hash(str(st.session_state))}")
-    if not st.session_state.get("oi_instrumented", False):
-        oi = OpenAIInstrumentor()
         try:
-            oi.instrument(tracer_provider=st.session_state["arize_tracer_provider"])
-        except Exception:
+            # Option 1: Use SimpleSpanProcessor for immediate exports (most reliable)
+            exporter = OTLPSpanExporter(
+                endpoint="https://otlp.arize.com/v1/traces",
+                headers={
+                    "space_id": ARIZE_SPACE_ID,
+                    "api_key": ARIZE_API_KEY,
+                }
+            )
+            
+            # SimpleSpanProcessor exports immediately, no batching
+            processor = SimpleSpanProcessor(exporter)
+            
+            tp = register(
+                space_id=ARIZE_SPACE_ID, 
+                api_key=ARIZE_API_KEY, 
+                project_name=ARIZE_PROJECT_NAME
+            )
+            
+            # Add the immediate processor
+            tp.add_span_processor(processor)
+            
+            st.session_state["arize_tracer_provider"] = tp
+            st.session_state["oi_instrumented"] = False
+            
+        except Exception as e:
+            st.error(f"Tracing init failed: {e}")
+            return
+    
+    # Instrument OpenAI
+    if not st.session_state.get("oi_instrumented", False):
+        try:
+            oi = OpenAIInstrumentor()
+            # Uninstrument first to avoid conflicts
             try:
                 oi.uninstrument()
-            except Exception:
+            except:
                 pass
+            
             oi.instrument(tracer_provider=st.session_state["arize_tracer_provider"])
-        st.session_state["oi_instrumented"] = True
+            st.session_state["oi_instrumented"] = True
+        except Exception as e:
+            st.warning(f"OpenAI instrumentation failed: {e}")
 
-init_tracing_once()
+# Initialize tracing
+init_tracing_realtime()
 
 # ==== Helpers for "definitive answer" extraction
 NUM_RE = re.compile(r"(?P<value>-?\d{1,3}(?:,\d{3})*(?:\.\d+)?%?|-?\d+(?:\.\d+)?%?)")
@@ -102,7 +128,7 @@ class Agent:
             pres = 0.9 if self.referring else 0.6
 
             resp = self.client.chat.completions.create(
-                model="gpt-4.1-nano",
+                model="gpt-4o-mini",  # Fixed model name
                 messages=messages,
                 temperature=temp,
                 top_p=0.95,
@@ -112,12 +138,19 @@ class Agent:
             )
             text = resp.choices[0].message.content
 
-            span.set_attribute("llm.request.model", "gpt-3.5-turbo")
+            span.set_attribute("llm.request.model", "gpt-4o-mini")
             span.set_attribute("llm.request.temperature", temp)
             span.set_attribute("llm.request.top_p", 0.95)
             span.set_attribute("output.response", text[:200])
 
-            return text
+        # Force flush after each agent response
+        if "arize_tracer_provider" in st.session_state:
+            try:
+                st.session_state["arize_tracer_provider"].force_flush(timeout_millis=1000)
+            except:
+                pass
+
+        return text
 
 # ==== Orchestrator
 class MultiAgentOrchestrator:
@@ -246,7 +279,7 @@ Be decisive. No disclaimers.'''
             main_span.set_attribute("workflow.status", "completed")
             main_span.set_attribute("agents.used", "research,creative" + (",referee" if self.referring_mode else ""))
 
-            return {
+            result = {
                 "research_analysis": r,
                 "creative_ideas": c,
                 "refereeing": confab if self.referring_mode else None,
@@ -257,6 +290,15 @@ Be decisive. No disclaimers.'''
                 "session_id": session_id
             }
 
+        # Force flush after collaboration completes
+        if "arize_tracer_provider" in st.session_state:
+            try:
+                st.session_state["arize_tracer_provider"].force_flush(timeout_millis=2000)
+            except:
+                pass
+
+        return result
+
 # ==== Streamlit UI
 st.title("Multi-Agent Collaboration Demo")
 st.caption("Get decisive answers with confident multi-agent analysis")
@@ -265,13 +307,33 @@ with st.sidebar:
     st.markdown("## Controls")
     referring_mode = st.toggle("Creative Details (encourage confident specifics)", value=True)
     st.markdown("---")
-    if st.button("Export Traces to Arize"):
+    
+    # Enhanced export button
+    if st.button("🔄 Force Export to Arize"):
         if "arize_tracer_provider" in st.session_state:
-            try:
-                st.session_state["arize_tracer_provider"].force_flush(timeout_millis=5000)
-                st.success("Traces exported!")
-            except Exception as e:
-                st.warning(f"Export attempt: {e}")
+            with st.spinner("Exporting traces..."):
+                try:
+                    # Multiple flush attempts
+                    success = False
+                    for timeout in [2000, 5000, 10000]:
+                        try:
+                            st.session_state["arize_tracer_provider"].force_flush(timeout_millis=timeout)
+                            success = True
+                            break
+                        except Exception as e:
+                            if timeout == 10000:  # Last attempt
+                                st.warning(f"Timeout {timeout}ms failed: {e}")
+                            continue
+                    
+                    if success:
+                        st.success("✅ Traces exported successfully!")
+                    else:
+                        st.error("❌ All export attempts failed")
+                        
+                except Exception as e:
+                    st.error(f"❌ Export failed: {str(e)}")
+        else:
+            st.error("❌ No tracer provider found")
 
 # Initialize clients / orchestrator / history
 if "openai_client" not in st.session_state:
