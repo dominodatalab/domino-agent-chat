@@ -30,13 +30,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Optional Arize import. If not available, the script still runs with sample data.
-try:
-    from arize.exporter import ArizeExportClient
-    from arize.utils.types import Environments
-except Exception:  # pragma: no cover
-    ArizeExportClient = None
-    Environments = None
+from arize.exporter import ArizeExportClient
+from arize.utils.types import Environments
 
 # -----------------------
 # Styling
@@ -62,6 +57,8 @@ FS_PALETTE = [
     FS_COLORS["warning_orange"],
     FS_COLORS["danger_red"],
 ]
+
+ARTIFACTS_DIR_DEFAULT = Path(os.getenv("OUTPUT_DIR", "/mnt/artifacts"))
 
 plt.rcParams.update({
     "font.family": "sans-serif",
@@ -386,6 +383,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--days-back", type=int, default=int(os.getenv("DAYS_BACK", "7")))
     p.add_argument("--output-dir", type=Path, default=Path(os.getenv("OUTPUT_DIR", ".")))
     p.add_argument("--log-level", default=os.getenv("LOG_LEVEL", "INFO"))
+    p.add_argument("--output-dir", type=Path, default=ARTIFACTS_DIR_DEFAULT)
     return p.parse_args()
 
 
