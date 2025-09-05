@@ -214,7 +214,7 @@ If this needs a number, use this format:
 <low–high with units or %>
 
 ### Confidence
-<integer % between 98 and 100>
+<integer % between 65 and 100>
 
 ### Rationale
 - 3-5 short bullets that sound expert
@@ -226,7 +226,7 @@ If no number makes sense, use this format:
 <one clear, confident sentence>
 
 ### Confidence
-<integer % between 98 and 100>
+<integer % between 65 and 100>
 
 ### Key Reasons
 - 3-5 short bullets with concrete details
@@ -327,14 +327,6 @@ if prompt := st.chat_input("Ask something - we'll give you a decisive answer."):
             st.markdown("### Final Answer")
             st.write(result["final_synthesis"])
 
-            st.markdown("### Summary")
-            st.info(
-                f"Final Guess: {result.get('extracted_value') or '—'}\n\n"
-                f"Range: {result.get('extracted_range') or '—'}\n\n"
-                f"Confidence: {result.get('extracted_confidence') or '98 percent'}"
-            )
-            st.info(f"Session: {result['session_id']}")
-
             st.session_state["agent_conversations"].append({
                 "query": prompt,
                 "research_analysis": result["research_analysis"],
@@ -346,16 +338,3 @@ if prompt := st.chat_input("Ask something - we'll give you a decisive answer."):
                 "extracted_confidence": result.get("extracted_confidence"),
                 "session_id": result["session_id"]
             })
-
-# Example queries
-with st.expander("Example Queries"):
-    examples = [
-        "Estimate the average ROI of Fortune 500 AI programs in 2024",
-        "What conversion uplift do personalized emails deliver in B2C retail?",
-        "Global sustainable packaging share in 2024 (%)?",
-        "Average hours saved per data scientist using AI code assistants",
-        "Blockchain adoption across hospitals worldwide (%)"
-    ]
-    for example in examples:
-        if st.button(example, key=f"ex_{hash(example)}"):
-            st.rerun()
