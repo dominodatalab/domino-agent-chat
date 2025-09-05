@@ -1,0 +1,105 @@
+*** a/govdash.py
+--- b/govdash.py
+@@
+-from arize.utils.types import Environments
++from arize.utils.types import Environments
+@@
+ def sample_data(days_back: int, logger: logging.Logger, n: int = 380) -> pd.DataFrame:
+@@
+     df = pd.DataFrame({
+         "context.span_id": [f"span_{i:04d}" for i in range(n)],
+         "attributes.llm.model_name": rng.choice(["gpt-4", "gpt-3.5-turbo", "claude-3", "gpt-4o"], n),
+         "attributes.llm.provider": rng.choice(["openai", "anthropic"], n),
+         "attributes.llm.token_count.total": rng.integers(50, 3200, n),
+         "status_code": rng.choice(["OK", "ERROR"], n, p=[0.94, 0.06]),
+         "start_time": dates,
+         "end_time": dates + pd.to_timedelta(rng.integers(1, 28, n), unit="s"),
+         "name": ["ChatCompletion"] * n,
+     })
++    # --- demo extras for new panel (optional in real data) ---
++    df["eval.hallucination"] = rng.binomial(1, 0.12, n)            # 12% flagged
++    df["eval.consistency"]   = rng.uniform(0.65, 0.95, n)           # 0..1 consistency score
++    df["eval.correct"]       = rng.binomial(1, 0.78, n)             # 78% correct vs gold
++    df["safety.toxicity"]    = rng.binomial(1, 0.03, n)             # 3% toxic
++    df["safety.injection"]   = rng.binomial(1, 0.02, n)             # 2% prompt injection detected
+     return df
+@@
+ def proxy_bias_groups(df: pd.DataFrame) -> Dict[str, float]:
+@@
+     return {"Group A": base, "Group B": max(0.0, base * (1 - 0.2 * gap))}
+ 
++# -----------------------
++# Safety & evaluation helpers (optional fields)
++# -----------------------
++
++def _col_rate(df: pd.DataFrame, col: str) -> Optional[float]:
++    """Mean of a boolean/0-1 column if present and non-empty; else None."""
++    if col in df.columns:
++        s = pd.to_numeric(df[col], errors="coerce").dropna()
++        if len(s):
++            return float(s.mean())
++    return None
++
++def safety_eval_summary(df: pd.DataFrame) -> Dict[str, float]:
++    """
++    Produces normalized 0-100 metrics if the underlying columns exist.
++    - Accuracy: mean(eval.correct)
++    - Consistency: mean(eval.consistency)
++    - No-Hallucination: 1 - mean(eval.hallucination)
++    - Toxicity-Free: 1 - mean(safety.toxicity)
++    - PI-Free: 1 - mean(safety.injection)
++    Missing metrics are omitted.
++    """
++    out: Dict[str, float] = {}
++    acc = _col_rate(df, "eval.correct")
++    if acc is not None:
++        out["Accuracy"] = acc * 100.0
++    cons = _col_rate(df, "eval.consistency")
++    if cons is not None:
++        out["Consistency"] = cons * 100.0
++    hallo = _col_rate(df, "eval.hallucination")
++    if hallo is not None:
++        out["No-Hallucination"] = (1.0 - hallo) * 100.0
++    tox = _col_rate(df, "safety.toxicity")
++    if tox is not None:
++        out["Toxicity-Free"] = (1.0 - tox) * 100.0
++    inj = _col_rate(df, "safety.injection")
++    if inj is not None:
++        out["PI-Free"] = (1.0 - inj) * 100.0
++    return out
++
+ # -----------------------
+ # Plots
+ # -----------------------
+@@
+ def bars_bias_detection(ax: plt.Axes, df: pd.DataFrame) -> None:
+     grp = proxy_bias_groups(df)
+     labels = list(grp.keys()); values = [grp[k] for k in labels]
+     bars = ax.bar(labels, values)
+     for b, v in zip(bars, values):
+         ax.text(b.get_x() + b.get_width()/2, v + 1, f"{v:.1f}%", ha="center", va="bottom", fontweight="bold", fontsize=9)
+     ax.set_ylim(0, 100)
+     ax.set_title("Bias Detection (proxy parity)", loc="left", color=FS_COLORS["primary_blue"]) 
+     ax.set_ylabel("Score (%)")
++
++def bars_safety_eval(ax: plt.Axes, df: pd.DataFrame) -> None:
++    """Compact bar chart that summarizes key safety/eval metrics when present."""
++    scores = safety_eval_summary(df)
++    ax.clear()
++    if not scores:
++        ax.axis("off")
++        ax.text(0.5, 0.5, "No safety/eval fields present", ha="center", va="center", fontsize=10)
++        return
++    labels = list(scores.keys()); values = [scores[k] for k in labels]
++    bars = ax.bar(labels, values)
++    for b, v in zip(bars, values):
++        ax.text(b.get_x() + b.get_width()/2, v + 1, f"{v:.1f}%", ha="center", va="bottom", fontweight="bold", fontsize=9)
++    ax.set_ylim(0, 100)
++    ax.set_title("Safety & Eval Overview", loc="left", color=FS_COLORS["primary_blue"])
++    ax.set_ylabel("Score / Rate (%)")
+@@
+ def build_dashboard(df: pd.DataFrame) -> plt.Figure:
+@@
+-    bars_bias_detection(axs["X"], df)
++    # Lower-right panel shows the compact safety/eval summary (replaces bias panel).
++    bars_safety_eval(axs["X"], df)

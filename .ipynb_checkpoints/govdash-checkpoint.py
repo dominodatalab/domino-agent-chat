@@ -58,7 +58,6 @@ FS_PALETTE = [
     FS_COLORS["danger_red"],
 ]
 
-ARTIFACTS_DIR_DEFAULT = Path(os.getenv("OUTPUT_DIR", "/mnt/artifacts"))
 
 plt.rcParams.update({
     "font.family": "sans-serif",
@@ -381,9 +380,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--space-id", default=os.getenv("ARIZE_SPACE_ID", ""))
     p.add_argument("--model-id", default=os.getenv("ARIZE_PROJECT_NAME", ""))
     p.add_argument("--days-back", type=int, default=int(os.getenv("DAYS_BACK", "7")))
-    p.add_argument("--output-dir", type=Path, default=Path(os.getenv("OUTPUT_DIR", ".")))
+    p.add_argument("--output-dir", type=Path, default=Path(os.getenv("OUTPUT_DIR", "/mnt/artifacts")))
     p.add_argument("--log-level", default=os.getenv("LOG_LEVEL", "INFO"))
-    p.add_argument("--output-dir", type=Path, default=ARTIFACTS_DIR_DEFAULT)
     return p.parse_args()
 
 
