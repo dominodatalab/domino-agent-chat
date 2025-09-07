@@ -14,24 +14,24 @@ Utilizes document parsing, OCR, and NLP for metric extraction. Based on informat
 **New/Existing System**: enhancement
 
 ## Applicable Policies, Standards, and Procedures
-- Fitch Data Governance Policy
 - Copyright laws
+- Fitch Data Governance Policy
 
 ## Functional Requirements
 - API integration capabilities
-- The FINREP Extractor is a custom-built AI system designed for the automated extraction of key financial metrics and data points from uploaded financial reports. It is embedded within Fitch’s internal suite of analytics tools, accessible via API and Web UI for internal users. Its primary function is to streamline data acquisition for internal analysis, improving efficiency and accuracy in financial reporting workflows.
-- RESTful API endpoints
 - AWS Redshift Access, Atlas Access via REST API
 - CSV data exports
 - Hosted on internal servers; API/Web UI endpoints
 - Outputs data in JSON/CSV
-- Outputs data in Historical portfolio data, Portfolio and market data, Fitch Data Governance Policy
+- RESTful API endpoints
+- The FINREP Extractor is a custom-built AI system designed for the automated extraction of key financial metrics and data points from uploaded financial reports. It is embedded within Fitch’s internal suite of analytics tools, accessible via API and Web UI for internal users. Its primary function is to streamline data acquisition for internal analysis, improving efficiency and accuracy in financial reporting workflows.
+- Outputs data in CSV data exports, Fitch Data Governance Policy, Historical portfolio data, Portfolio and market data
 - Access control for internal users only
 
 ## Development Dataset
 **Overview**: Pre-approved reports from internal repositories.
 
-**Data Sources and Extraction Process**: Reports sourced from CSV data exports, Internal Fitch repositories, Historical portfolio data, Portfolio and market data, Fitch Data Governance Policy transformed using processing pipelines.
+**Data Sources and Extraction Process**: Reports sourced from CSV data exports, Fitch Data Governance Policy, Historical portfolio data, Internal Fitch repositories, Portfolio and market data transformed using processing pipelines.
 
 **Vendor Data/Data Proxies**: no-vendor
 
@@ -63,16 +63,18 @@ Review: Monthly dashboard; integrated with internal monitoring tools
 **Ethical Considerations**:
 - **Fairness**: No risk of discrimination; only financial data processed.
 - **Safety**: No personal data; complies with internal and external regulations.
-- **Security**: Restricted to internal access; Unauthorized access, Access logs and security events, Input validation to prevent manipulation, Authentication systems.
+- **Security**: Restricted to internal access; Access logs and security events, Authentication systems, Input validation to prevent manipulation, Unauthorized access.
 - **Robustness**: Output accuracy monitored; retraining scheduled annually.
 - **Explainability**: Processing steps logged and reviewable by analysts.
 - **Transparency**: System functionality documented for users.
 - **Governance**: Roles assigned per organizational AI Governance Guidance.
 
 ## Risk Monitoring Plan
-Risks: Extraction errors, data quality issues, unauthorized access
-Metrics: Extraction accuracy, input format validation, access logs
-Review: Monthly dashboard; integrated with internal monitoring tools
+**Risks**: Processing errors, Data quality issues, Unauthorized access
+
+**Metrics**: Processing accuracy, Input format validation, Access logs
+
+**Review**: Monthly dashboard; integrated with internal monitoring tools
 
 ## Lessons Learned and Future Enhancements
 - enhancement
@@ -104,3 +106,9 @@ Review: Monthly dashboard; integrated with internal monitoring tools
 
 ## Attachments
 - images.png (8.8 K) - govern-metadata/8c1e4559-549c-42e8-a05a-760c99665349/b3d07aa3-076b-4313-971d-4ccfea2c27ab/images.png
+
+## Visual Governance Dashboard
+
+_Auto-generated from recent trace data (or representative sample if no credentials were present)._
+
+![AI Governance Dashboard](../artifacts/ai_governance_dashboard_lite.png){ width=90% }
