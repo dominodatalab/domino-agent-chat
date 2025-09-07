@@ -12,7 +12,6 @@ from typing import Dict, Any, Optional, Tuple
 from opentelemetry.trace import get_tracer
 
 # ==== CONFIG
-OPENAI_API_KEY = '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'
 ARIZE_API_KEY = 'ak-83932695-b8e5-4c1b-b06d-300dbd28ea1b-A2RReorb1KqILlL3sZ9KXh2YFrdDBZd8'
 ARIZE_SPACE_ID = 'U3BhY2U6MjY4ODI6bmYyUg=='
 ARIZE_PROJECT_NAME = 'FSI-Demo-Project'
