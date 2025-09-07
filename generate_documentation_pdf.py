@@ -567,7 +567,7 @@ def build_dashboard(df: pd.DataFrame) -> plt.Figure:
     )
     fig.patch.set_facecolor(FS_COLORS["white"])
     axs["T"].axis("off")
-    axs["T"].text(0.01, 0.60, "AI GOVERNANCE & RISK MANAGEMENT DASHBOARD",
+    axs["T"].text(0.01, 0.60, "AI GOVERNANCE & RISK MANAGEMENT DASHBOARD (data is sourced from Arize)",
                   fontsize=22, fontweight="bold", color=FS_COLORS["primary_blue"], transform=axs["T"].transAxes)
     axs["T"].text(0.01, 0.22, "Real-time Monitoring & Compliance Assessment",
                   fontsize=12, color=FS_COLORS["neutral_gray"], style="italic", transform=axs["T"].transAxes)
