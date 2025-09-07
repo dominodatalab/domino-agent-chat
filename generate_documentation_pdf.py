@@ -767,5 +767,140 @@ def main():
     print_bundle_summary(filtered_data.get('data', []))
 
 
-if __name__ == '__main__':
+
+def main2():
+    import sys
+    from pathlib import Path
+
+    try:
+        import markdown
+        from weasyprint import HTML, CSS
+    except ImportError as e:
+        print("Missing packages. Install with:", file=sys.stderr)
+        print("  pip install markdown weasyprint", file=sys.stderr)
+        sys.exit(1)
+
+    # Hardcoded Domino paths
+    INPUT_MD  = Path("/mnt/code/HelpBot_v23_Internal_Policy_Update_documentation.md")
+    OUTPUT_PDF = Path("/mnt/artifacts/governance_report.pdf")
+    LETTERHEAD = Path("/mnt/code/images/letterhead.png")  # your Domino letterhead
+
+    if not INPUT_MD.exists():
+        print(f"ERROR: {INPUT_MD} not found.", file=sys.stderr)
+        sys.exit(1)
+    if not LETTERHEAD.exists():
+        print(f"WARNING: Letterhead not found at {LETTERHEAD}", file=sys.stderr)
+
+    # CSS with letterhead and professional styling
+    CSS_STYLES = f"""
+    @page {{
+      size: Letter;
+      margin: 1.5in 1in 1in 1in;  /* extra room for header image */
+      @top-center {{
+        content: element(doc-header);
+        vertical-align: top;
+        margin-bottom: 0.2in;
+      }}
+      @bottom-center {{
+        content: counter(page) " / " counter(pages);
+        font-size: 10pt;
+        color: #444;
+      }}
+    }}
+    
+    body {{
+      font-family: "DejaVu Sans", "Liberation Sans", Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.3;
+    }}
+    
+    .doc-header {{
+      position: running(doc-header);
+      text-align: center;
+    }}
+    .doc-header img {{
+      max-width: 100%;
+      width: 6.5in;      /* tweak to fit your logo width */
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }}
+    
+    h1, h2, h3, h4 {{
+      font-weight: 700;
+      margin-top: 1.4em;
+      margin-bottom: 0.55em;
+    }}
+    
+    p, li {{ margin: 0.6em 0; }}
+    
+    table {{
+      border-collapse: collapse;
+      width: 100%;
+      margin: 0.8em 0;
+      font-size: 10.5pt;
+    }}
+    th, td {{
+      border: 1px solid #ccc;
+      padding: 6pt 8pt;
+      vertical-align: top;
+    }}
+    th {{ background: #f4f4f6; font-weight: 700; }}
+    
+    img {{
+      max-width: 100%;
+      height: auto;
+      page-break-inside: avoid;
+      margin: 0.5em 0;
+    }}
+    
+    code, pre {{
+      font-family: "Courier New", monospace;
+      font-size: 10.5pt;
+    }}
+    pre {{
+      background: #f7f7f9;
+      border: 1px solid #eee;
+      padding: 8pt 10pt;
+      overflow-x: auto;
+    }}
+    
+    hr {{
+      border: 0;
+      border-top: 1px solid #ddd;
+      margin: 1.2em 0;
+    }}
+    """
+
+
+    md_text = INPUT_MD.read_text(encoding="utf-8")
+    html_body = markdown.markdown(md_text, extensions=["extra", "toc", "tables", "sane_lists"])
+    header_html = f'''
+    <div class="doc-header">
+      <img src="{LETTERHEAD}" alt="Domino Letterhead">
+    </div>
+    '''
+
+    html_doc = f"""<!doctype html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Governance Report</title>
+      </head>
+      <body>
+        {header_html}
+        {html_body}
+      </body>
+    </html>"""
+
+    HTML(string=html_doc, base_url=str(INPUT_MD.parent)).write_pdf(
+        str(OUTPUT_PDF),
+        stylesheets=[CSS(string=CSS_STYLES)]
+    )
+    print(f"Done → {OUTPUT_PDF}")
+
+
+
+if __name__ == "__main__":
     main()
+    main2()
