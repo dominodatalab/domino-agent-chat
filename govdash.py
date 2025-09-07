@@ -1,21 +1,3 @@
-#!/usr/bin/env python3
-"""
-AI Governance Dashboard – Lite
-- Cleaner, professional layout using subplot_mosaic
-- Minimal visual set (no busy roadmap/incident/harmful-content/hallucination panels)
-- KPI band + 6 core charts only
-- Pulls from Arize if creds exist, otherwise uses deterministic sample data
-
-Run:
-  python govdash_lite.py \
-    --space-id "$ARIZE_SPACE_ID" \
-    --model-id "$ARIZE_PROJECT_NAME" \
-    --api-key "$ARIZE_API_KEY" \
-    --days-back 7 \
-    --output-dir .
-
-All credentials are read from flags or env vars.
-"""
 from __future__ import annotations
 
 import os
@@ -398,7 +380,8 @@ def main() -> None:
         df = None
 
     if df is None or df.empty:
-        df = sample_data(args.days_back, log)
+        print("didnt find any data. check api keys in env variables")
+        exit()
 
     df = clean(df, log)
 
