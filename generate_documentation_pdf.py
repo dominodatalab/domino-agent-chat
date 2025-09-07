@@ -584,7 +584,6 @@ def build_dashboard(df: pd.DataFrame) -> plt.Figure:
     return fig
 
 def generate_dashboard_png(output_dir: Path) -> Optional[Path]:
-    """Pull Arize (if creds), else sample; build dashboard and save PNG. Returns path or None."""
     api = os.getenv("ARIZE_API_KEY", "")
     space = os.getenv("ARIZE_SPACE_ID", "")
     model = os.getenv("ARIZE_PROJECT_NAME", "")
@@ -597,7 +596,7 @@ def generate_dashboard_png(output_dir: Path) -> Optional[Path]:
         df = pull_arize_data(api, space, model, days_back)
     if df is None or df.empty:
         # deterministic fallback
-        df = sample_data(days_back)
+        df = pd.Dataframe()
 
     df = clean(df)
     fig = build_dashboard(df)
@@ -733,9 +732,9 @@ def append_dashboard_section(markdown_file: str, png_path: Path) -> None:
 
     section = [
         "",
-        "## Visual Governance Dashboard",
+        "## Arize Visual Governance Dashboard",
         "",
-        "_Auto-generated from recent trace data (or representative sample if no credentials were present)._",
+        "_Auto-generated from Arize trace data._",
         "",
         f"![AI Governance Dashboard]({rel}){{ width=90% }}",
         "",
@@ -791,7 +790,6 @@ def main2():
     if not LETTERHEAD.exists():
         print(f"WARNING: Letterhead not found at {LETTERHEAD}", file=sys.stderr)
 
-    # CSS with letterhead and professional styling
     CSS_STYLES = f"""
     @page {{
       size: Letter;
@@ -803,16 +801,28 @@ def main2():
       }}
       @bottom-center {{
         content: counter(page) " / " counter(pages);
-        font-size: 10pt;
-        color: #444;
+        font-size: 9pt;
+        color: #555;
       }}
     }}
     
     body {{
       font-family: "DejaVu Sans", "Liberation Sans", Arial, sans-serif;
-      font-size: 11pt;
-      line-height: 1.3;
+      font-size: 10pt;
+      line-height: 1.35;
     }}
+    
+    h1, h2, h3, h4 {{
+      font-weight: 600;
+      margin-top: 1em;
+      margin-bottom: 0.4em;
+      line-height: 1.2;
+    }}
+    
+    h1 {{ font-size: 14pt; }}
+    h2 {{ font-size: 12.5pt; }}
+    h3 {{ font-size: 11.5pt; font-weight: 500; }}
+    h4 {{ font-size: 10.5pt; font-weight: 500; color: #333; }}
     
     .doc-header {{
       position: running(doc-header);
@@ -825,27 +835,21 @@ def main2():
       display: block;
       margin: 0 auto;
     }}
-    
-    h1, h2, h3, h4 {{
-      font-weight: 700;
-      margin-top: 1.4em;
-      margin-bottom: 0.55em;
-    }}
-    
-    p, li {{ margin: 0.6em 0; }}
+        
+    p, li {{ margin: 0.5em 0; }}
     
     table {{
       border-collapse: collapse;
       width: 100%;
-      margin: 0.8em 0;
-      font-size: 10.5pt;
+      margin: 0.7em 0;
+      font-size: 9.5pt;
     }}
     th, td {{
       border: 1px solid #ccc;
       padding: 6pt 8pt;
       vertical-align: top;
     }}
-    th {{ background: #f4f4f6; font-weight: 700; }}
+    th {{ background: #f4f4f6; font-weight: 600; }}
     
     img {{
       max-width: 100%;
@@ -856,7 +860,7 @@ def main2():
     
     code, pre {{
       font-family: "Courier New", monospace;
-      font-size: 10.5pt;
+      font-size: 9.5pt;
     }}
     pre {{
       background: #f7f7f9;
@@ -868,7 +872,7 @@ def main2():
     hr {{
       border: 0;
       border-top: 1px solid #ddd;
-      margin: 1.2em 0;
+      margin: 1em 0;
     }}
     """
 
@@ -902,5 +906,5 @@ def main2():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
     main2()

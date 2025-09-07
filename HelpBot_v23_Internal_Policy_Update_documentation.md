@@ -107,8 +107,8 @@ Review: Monthly dashboard; integrated with internal monitoring tools
 ## Attachments
 - images.png (8.8 K) - govern-metadata/8c1e4559-549c-42e8-a05a-760c99665349/b3d07aa3-076b-4313-971d-4ccfea2c27ab/images.png
 
-## Visual Governance Dashboard
+## Arize Visual Governance Dashboard
 
-_Auto-generated from recent trace data (or representative sample if no credentials were present)._
+_Auto-generated from Arize trace data._
 
 ![AI Governance Dashboard](../artifacts/ai_governance_dashboard_lite.png){ width=90% }
