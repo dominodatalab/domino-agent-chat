@@ -39,7 +39,7 @@ EOF
 # Generate and display the Streamlit URL
 if [ -n "${DOMINO_RUN_HOST_PATH:-}" ]; then
     CLEAN_PATH=$(echo "$DOMINO_RUN_HOST_PATH" | sed 's|/r||g')
-    STREAMLIT_URL="https://se-demo.domino.tech${CLEAN_PATH}proxy/${PORT}/"
+    STREAMLIT_URL="https://fitch.domino-eval.com${CLEAN_PATH}proxy/${PORT}/"
     echo "========================================="
     echo "Streamlit URL: $STREAMLIT_URL"
     echo "========================================="
