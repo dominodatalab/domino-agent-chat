@@ -646,7 +646,7 @@ def print_bundle_summary(bundles):
         print("No active bundles found for this project.")
         return {}
 
-    base_url = 'https://se-demo.domino.tech/'
+    base_url = 'https://fitch.domino-eval.com/'
     headers = get_auth_headers()
 
     print(f"\n=== COMPREHENSIVE GOVERNANCE BUNDLE ANALYSIS ===")
@@ -745,7 +745,7 @@ def append_dashboard_section(markdown_file: str, png_path: Path) -> None:
 
 
 def main():
-    base_url = 'https://se-demo.domino.tech/'
+    base_url = 'https://fitch.domino-eval.com/'
     project_id = os.getenv('DOMINO_PROJECT_ID')
     if not project_id:
         print("Error: DOMINO_PROJECT_ID environment variable not found.", file=sys.stderr)
